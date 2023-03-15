@@ -21,6 +21,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -62,6 +64,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ApiResponse verifyLink(VerifyTokenDto verifyTokenDto) {
+
+        Optional<User> existingUser = userRepository.findByConfirmationToken();
+
+
         return null;
     }
 
