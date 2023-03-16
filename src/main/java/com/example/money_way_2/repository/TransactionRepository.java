@@ -8,4 +8,6 @@ import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<Transfer, Long> {
     Optional<Transaction> findByTransactionId(Long id);
+
+    Optional<Object> findByVirtualAccountRef(String reference);
 }
