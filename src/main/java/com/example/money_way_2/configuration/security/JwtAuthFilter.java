@@ -1,5 +1,11 @@
 package com.example.money_way_2.configuration.security;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -8,33 +14,45 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@Component
+@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
-    /**
-     * Same contract as for {@code doFilter}, but guaranteed to be
-     * just invoked once per request within a single request thread.
-     * See {@link #shouldNotFilterAsyncDispatch()} for details.
-     * <p>Provides HttpServletRequest and HttpServletResponse arguments instead of the
-     * default ServletRequest and ServletResponse ones.
-     *
-     * @param request
-     * @param response
-     * @param filterChain
-     */
 
-    private final Cu
-
+    private final CustomUserDetailService userDetailsService;
+    private final JwtUtils jwtUtils;
 
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
         final String userEmail;
         final String jwtToken;
 
-        if (authHeader == null || !)
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        jwtToken = authHeader.substring(7);
+
+        userEmail = jwtUtils.extractUsername(jwtToken);
+
+        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+            final boolean isTokenValid = !jwtUtils.isTokenExpired(jwtToken);
+
+            if (isTokenValid) {
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        }
+        filterChain.doFilter(request, response);
     }
 }

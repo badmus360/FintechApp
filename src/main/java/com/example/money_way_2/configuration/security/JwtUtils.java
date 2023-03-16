@@ -17,37 +17,40 @@ import java.util.function.Function;
 @Component
 public class JwtUtils {
 
-    @Value("MoneyWay")
+    @Value("${app.jwt_secret}")
     private String JWT_SECRET;
 
     public String extractUsername(String token){
+//        Object Claims;
         return extractClaim(token, Claims::getSubject);
     }
 
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
+
     public boolean hasClaim(String token, String claimName){
         final Claims claims = extractAllClaims(token);
         return claims.get(claimName) != null;
     }
+
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token){
+    private Claims extractAllClaims(String token) {
         Claims claims;
         try {
-            claims = Jwts.parser().setSigningKey(JWT_SECRET).parseClaimsJws(token).getBody();
-        } catch (JwtException e){
+            claims =  Jwts.parser().setSigningKey(JWT_SECRET).parseClaimsJws(token).getBody();
+        } catch (JwtException e) {
             throw new JwtException(e.getMessage());
         }
         return claims;
     }
 
-    public Boolean isTokenExpired(String token){
+    public Boolean isTokenExpired(String token) {
 
         return extractExpiration(token).before(new Date());
     }
@@ -69,11 +72,15 @@ public class JwtUtils {
 
     public String generateSignUpConfirmationToken(String email){
         Date currentDate = new Date();
-        Date expirationDate = new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(2));
+        Date expirationDate = new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(24));
 
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration()
+                .setExpiration(expirationDate)
+                .signWith(SignatureAlgorithm.HS512, JWT_SECRET)
+                .compact();
     }
+
 }
+
