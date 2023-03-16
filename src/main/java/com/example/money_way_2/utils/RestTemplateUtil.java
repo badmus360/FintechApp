@@ -18,19 +18,18 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
 @RequiredArgsConstructor
+@Component
 public class RestTemplateUtil {
-
     private final RestTemplate restTemplate;
     private final EnvironmentVariables environmentVariables;
 
-    public HttpHeaders getVTPASS_Header() {
+    public HttpHeaders  getVTPASS_Header() {
         HttpHeaders header = new HttpHeaders();
         header.add("api-key", environmentVariables.getVTPASS_API_KEY());
         header.add("secret-key", environmentVariables.getVTPASS_Secret_Key());
         header.add("public-key", environmentVariables.getVTPASS_Public_Key());
-        header.setContentType(MediaType.APPLICATION_JSON);
+        header.setContentType((MediaType.APPLICATION_JSON));
         return header;
     }
 
@@ -69,7 +68,7 @@ public class RestTemplateUtil {
 
         TransferToBankRequest requestBody = TransferToBankRequest.builder()
                 .account_bank(transferToBankDto.getBankCode())
-                .account_number(transferToBankDto.getAccount_bank())
+                .account_number(transferToBankDto.getAccount_number())
                 .amount(transferToBankDto.getAmount())
                 .narration(transferToBankDto.getDescription())
                 .currency("NGN")
@@ -77,7 +76,6 @@ public class RestTemplateUtil {
                 .build();
 
         HttpEntity<TransferToBankRequest> entity = new HttpEntity<>(requestBody, headers);
-
         return restTemplate.exchange(environmentVariables.getGetTransferToBankUrl(),
                 HttpMethod.POST, entity, TransferToBankResponse.class).getBody();
     }
@@ -95,7 +93,41 @@ public class RestTemplateUtil {
                 HttpMethod.POST, entity, TransferToBankResponse.class, uriVariables).getBody();
     }
 
-    public DataVariationR
+    public DataVariationsResponse fetchDataVariations(String dataServiceProvider){
+        HttpHeaders header = getVTPASS_Header();
+        HttpEntity<?> entity = new HttpEntity<>(header);
+        return restTemplate.exchange(environmentVariables.getFetchDataVariations()+"serviceID="+dataServiceProvider+"-data",
+                HttpMethod.GET, entity, DataVariationsResponse.class).getBody();
 
+    }
+    public BillResponse getVTPassElectricityBillResponse(ElectricityRequestDto requestDto) {
+        HttpHeaders headers = getVTPASS_Header();
+        HttpEntity<ElectricityRequestDto> entity = new HttpEntity<>(requestDto, headers);
+
+        return restTemplate.exchange(environmentVariables.getElectricityBillsUrl(),
+                HttpMethod.POST, entity, BillResponse.class).getBody();
+
+    }
+    public DataPurchaseResponse getDataPurchaseResponse(DataRequestDto dataRequestDto) {
+        HttpHeaders headers = getVTPASS_Header();
+        HttpEntity<DataRequestDto> entity = new HttpEntity<>(dataRequestDto, headers);
+
+        return restTemplate.exchange(environmentVariables.getPurchaseDataUrl(),
+                HttpMethod.POST, entity, DataPurchaseResponse.class).getBody();
+    }
+    public TvPurchaseResponse getTvPurchaseResponse(VtPassTvPurchaseRequest vtPassRequest) {
+        HttpHeaders headers = getVTPASS_Header();
+
+        HttpEntity<VtPassTvPurchaseRequest> entity = new HttpEntity<>(vtPassRequest, headers);
+        return restTemplate.exchange(environmentVariables.getPurchaseSubscriptionUrl(),
+                HttpMethod.POST, entity, TvPurchaseResponse.class).getBody();
+    }
+
+    public TvVariationsResponse fetchTvVariations(String tvServiceProvider){
+        HttpHeaders headers = getVTPASS_Header();
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+        return restTemplate.exchange(environmentVariables.getFetchTvVariations() + "serviceID=" + tvServiceProvider,
+                HttpMethod.GET, entity, TvVariationsResponse.class).getBody();
+    }
 
 }
