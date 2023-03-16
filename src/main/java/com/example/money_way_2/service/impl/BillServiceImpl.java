@@ -252,16 +252,16 @@ public class BillServiceImpl implements BillService {
     }
 
 
-    private void saveBeneficiary(CustomerRequestDtoForTvSubscription request, Long userId) {
-        Optional<Beneficiary> savedBeneficiary = beneficiaryRepository.findBeneficiaryBySmartCardNumber(request.getDecoderOrSmartCardNumber());
+    private void saveBeneficiary(DataPurchaseRequest request, Long userId) {
+        Optional<Beneficiary> savedBeneficiary = beneficiaryRepository.findBeneficiariesByPhoneNumber(request.getPhoneNumber());
         if (savedBeneficiary.isEmpty()) {
             Beneficiary beneficiary = Beneficiary.builder()
                     .userId(userId)
-                    .smartCardNumber(request.getDecoderOrSmartCardNumber())
-                    .build();
+                    .phoneNumber(request.getPhoneNumber()).build();
             beneficiaryRepository.save(beneficiary);
         }
 
+    }
 
         private void saveTransactionForTvSubscription(TvPurchaseResponse response, String transactionReference, Long userId) {
             Transaction transaction = Transaction.builder()
@@ -289,18 +289,17 @@ public class BillServiceImpl implements BillService {
             walletRepository.save(userWallet);
         }
 
-        private void saveTransaction(VTPassResponseDto vtPassApiResponse, String requestId) {
-            transactionRepository.save(Transaction.builder()
-                    .transactionId(Long.parseLong(requestId))
-                    .userId(appUtil.getLoggedInUser().getId())
-                    .amount(BigDecimal.valueOf(vtPassApiResponse.getUnit_price()))
-                    .currency("NGN")
-                    .description(vtPassApiResponse.getProduct_name())
-                    .status(vtPassApiResponse.getStatus().equalsIgnoreCase("delivered") ? Status.SUCCESS :
-                            vtPassApiResponse.getStatus().equalsIgnoreCase("pending") ||
-                                    vtPassApiResponse.getStatus().equalsIgnoreCase("initiated") ? Status.PENDING : Status.FAILED)
-                    .paymentType(vtPassApiResponse.getType())
-                    .build());
-        }
+    private void saveTransaction(DataPurchaseResponse response, Long userId) {
+        Transaction transaction = Transaction.builder()
+                .userId(userId)
+                .currency("NGN")
+                .status(response.getCode().equals("000") ? Status.valueOf("SUCCESS") : Status.valueOf("FAILED"))
+                .request_id(response.getRequestId())
+                .amount(BigDecimal.valueOf(Double.parseDouble(response.getAmount())))
+                .build();
 
-}}
+        transactionRepository.save(transaction);
+    }
+
+}
+}

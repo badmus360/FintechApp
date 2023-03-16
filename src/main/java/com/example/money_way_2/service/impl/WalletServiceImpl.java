@@ -100,9 +100,6 @@ public class WalletServiceImpl implements WalletService {
                 .build();
     }
 
-
-
-
     @Override
     public ApiResponse<VerifyTransaction> verifyPayment(String transactionId) {
 

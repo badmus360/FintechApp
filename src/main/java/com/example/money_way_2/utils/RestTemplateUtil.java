@@ -1,10 +1,7 @@
 package com.example.money_way_2.utils;
 
-import com.example.money_way_2.dto.request.TransferToBankDto;
-import com.example.money_way_2.dto.request.TransferToBankRequest;
-import com.example.money_way_2.dto.response.BanksResponse;
-import com.example.money_way_2.dto.response.TransferFeeResponse;
-import com.example.money_way_2.dto.response.TransferToBankResponse;
+import com.example.money_way_2.dto.request.*;
+import com.example.money_way_2.dto.response.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
